@@ -1,0 +1,1669 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Revised Transcriptome Analysis Workflow</title>
+    <style>
+      :root {
+        --pgcv-primary: #12ca99;
+        --pgcv-accent: #2a7797;
+        --pgc-purple: #5e205e;
+        --pgc-dark: #2b3278;
+        --color-black: #333333;
+        --color-white: #ffffff;
+        --color-off-white: #e6e7e7;
+        --font-body:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        --pgcv-gradient-hero: linear-gradient(
+          135deg,
+          #2b3278 0%,
+          #5e205e 30%,
+          #2a7797 70%,
+          #12ca99 100%
+        );
+        --line: #e5e7eb;
+        --bg: #f8f9fa;
+        --card: #ffffff;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: var(--font-body);
+        font-size: 14px;
+        background-color: var(--bg);
+        color: var(--color-black);
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      header {
+        color: white;
+        padding: 30px 40px;
+        background: var(--pgcv-gradient-hero);
+      }
+      header h1 {
+        margin: 0 0 8px 0;
+        font-size: 1.8rem;
+        letter-spacing: -0.02em;
+      }
+      header p {
+        margin: 0;
+        max-width: 980px;
+        color: #f3f7ff;
+        font-size: 0.95rem;
+      }
+
+      /* Pinalawak ang sidebar tungong 320px para komportable at hindi masikip */
+      .layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 25px;
+        max-width: 1450px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      nav {
+        position: sticky;
+        top: 20px;
+        align-self: start;
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(31, 41, 55, 0.08);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+      }
+
+      nav h2 {
+        font-size: 1rem;
+        margin: 0 0 12px 0;
+        color: var(--pgc-dark);
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      nav a {
+        display: block;
+        text-decoration: none;
+        color: #334155;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.88rem;
+        margin-bottom: 4px;
+        transition: background 0.15s ease;
+      }
+
+      nav a:hover {
+        background: #ebf8ff;
+        color: var(--pgc-dark);
+      }
+
+      nav a.nav-main {
+        font-weight: 700;
+        color: var(--pgc-dark);
+        margin-top: 8px;
+      }
+
+      main {
+        min-width: 0;
+      }
+
+      .section {
+        background: var(--card);
+        margin-bottom: 24px;
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: 0 3px 16px rgba(31, 41, 55, 0.05);
+      }
+
+      .section h1 {
+        color: #1a365d;
+        border-bottom: 2px solid #3182ce;
+        padding-bottom: 10px;
+      }
+
+      .section h2 {
+        color: var(--pgc-dark);
+        background: linear-gradient(90deg, #f5f1ff, #ecfffc);
+        border: 1px solid #d8ccff;
+        border-left: 8px solid var(--pgcv-primary);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin: 0 0 18px 0;
+        font-size: 1.3rem;
+      }
+
+      .section h3 {
+        color: var(--pgc-purple);
+        margin: 22px 0 12px 0;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+        font-size: 1.1rem;
+      }
+
+      .output-gallery {
+        display: flex;
+        justify-content: center;
+        margin: 25px 0;
+      }
+
+      .output-figure {
+        border: 1px solid var(--line);
+        padding: 18px;
+        border-radius: 14px;
+        width: 100%;
+        max-width: 700px;
+        text-align: left;
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      }
+
+      .output-figure img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        cursor: zoom-in;
+        transition: transform 0.2s ease;
+      }
+
+      .output-figure img:hover {
+        transform: scale(1.01);
+      }
+
+      .output-figure figcaption {
+        margin-top: 14px;
+        color: #475569;
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+
+      .output-box {
+        background: #eee;
+        padding: 10px;
+        border-left: 5px solid #333;
+      }
+
+      pre {
+        background-color: #2d3748;
+        color: #f7fafc;
+        padding: 18px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: Consolas, Monaco, monospace;
+        font-size: 13px;
+      }
+
+      code {
+        font-family: Consolas, Monaco, monospace;
+        background-color: #edf2f7;
+        color: #e53e3e;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+
+      pre code {
+        background-color: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      ul {
+        padding-left: 20px;
+      }
+
+      li {
+        margin-bottom: 8px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        background-color: #fff;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 10px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #ebf8ff;
+        color: #2b6cb0;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f7fafc;
+      }
+
+      .checklist,
+      .info-box {
+        background-color: #ebf8ff;
+        border-left: 4px solid #3182ce;
+        padding: 18px;
+        border-radius: 8px;
+        margin: 18px 0;
+      }
+
+      .checklist h4,
+      .info-box h4 {
+        margin-top: 0;
+        color: #3182ce;
+      }
+
+      .lightbox-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.85);
+        justify-content: center;
+        align-items: center;
+        cursor: zoom-out;
+      }
+      .lightbox-modal.active {
+        display: flex;
+      }
+      .lightbox-modal img {
+        max-width: 95%;
+        max-height: 95%;
+        border-radius: 4px;
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+          padding: 10px;
+        }
+        nav {
+          position: relative;
+          top: 0;
+          max-height: none;
+        }
+      }
+    </style>
+
+    <script>
+      function openLightbox(imgSrc) {
+        const modal = document.getElementById("imageLightbox");
+        const modalImg = document.getElementById("lightboxImage");
+        modalImg.src = imgSrc;
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeLightbox() {
+        const modal = document.getElementById("imageLightbox");
+        modal.classList.remove("active");
+        document.body.style.overflow = "";
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".output-figure img").forEach((img) => {
+          img.setAttribute("title", "Click to enlarge");
+          img.addEventListener("click", () => openLightbox(img.src));
+        });
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeLightbox();
+      });
+    </script>
+  </head>
+  <body>
+    <header>
+      <h1>Revised Functional Annotation and Pathway Enrichment Analysis</h1>
+      <p>
+        A comprehensive step-by-step pipeline for transcript abundance
+        estimation, functional annotation, database mapping, and differential
+        gene expression analysis.
+      </p>
+    </header>
+
+    <div class="layout">
+      <!-- SIDEBAR NAVIGATION -->
+      <nav>
+        <h2>Quick Navigation</h2>
+        <a class="nav-main" href="#phase1">Phase 1: File Preparation</a>
+        <a class="nav-main" href="#phase2">Phase 2: Salmon Abundance</a>
+        <a class="nav-main" href="#phase3"
+          > Phase 3: Alignment (DIAMOND/HMMER)</a
+        >
+        <a class="nav-main" href="#phase4">Phase 4: Functional Annotation</a>
+        <a class="nav-main" href="#phase5"> Phase 5: DESeq2 & R Script</a>
+        <a class="nav-main" href="#visuals-section"
+          > Result Visualizations & Plots</a
+        >
+      </nav>
+
+      <!-- MAIN CONTENT AREA -->
+      <main>
+        <section class="section" id="phase1">
+          <h2>Phase 1: Download & File Preparation</h2>
+          <p>
+            Prepare your working directory and ensure all mandatory source files
+            are organized before beginning the pipeline.
+          </p>
+
+          <div class="info-box">
+            <h4>Required Reference Files and Directories:</h4>
+            <ul>
+              <li>
+                <strong>trinity_out.Trinity.fasta:</strong> The
+                <em>de novo</em> assembled transcripts.
+              </li>
+              <li>
+                <strong>trinity_out.Trinity.fasta.gene_trans_map:</strong> Links
+                transcript IDs to corresponding gene IDs.
+              </li>
+              <li>
+                <strong>Trinity.transdecoder.pep:</strong> Predicted protein
+                sequences from TransDecoder.
+              </li>
+              <li>
+                <strong>conditionA1 to B3:</strong> Folders containing raw data
+                (FASTQ) or aligned reads.
+              </li>
+              <li>
+                <strong>deseq_inputs:</strong> Directory housing formatted
+                datasets for downstream differential analysis.
+              </li>
+              <li>
+                <strong>databases:</strong> Directory containing reference
+                databases (e.g., UniProt, Pfam, Trinotate.sqlite).
+              </li>
+              <li>
+                <strong>transdecoder:</strong> Directory with intermediate files
+                from translation steps.
+              </li>
+            </ul>
+            <p>
+              <strong>Note:</strong> Remember to make a directory for your
+              databases (Pfam, Trinotate.sqlite, etc.) before running
+              annotations.
+            </p>
+          </div>
+
+          <h3>Sample Metadata Preparation</h3>
+          <p>
+            Prepare your experiment parameters in <code>metadata.csv</code> as
+            configured below:
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>SampleName</th>
+                <th>group 1</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>conditionA1</td>
+                <td>conditionA</td>
+              </tr>
+              <tr>
+                <td>conditionA2</td>
+                <td>conditionA</td>
+              </tr>
+              <tr>
+                <td>conditionA3</td>
+                <td>conditionA</td>
+              </tr>
+              <tr>
+                <td>conditionB1</td>
+                <td>conditionB</td>
+              </tr>
+              <tr>
+                <td>conditionB2</td>
+                <td>conditionB</td>
+              </tr>
+              <tr>
+                <td>conditionB3</td>
+                <td>conditionB</td>
+              </tr>
+            </tbody>
+          </table>
+          <p><b>Metadata Setup for DESeq2</b></p>
+          <p>Run this R code:</p>
+          <pre><code># 1. Load the metadata file
+metadata <- read.csv("metadata.csv", row.names = 1)
+
+# 2. Create the 'group1' column based on the 'Treatment' column
+# This follows the requirements of Objective 4
+metadata$group1 <- metadata$Treatment
+
+# 3. Convert the 'group1' column to a factor
+# This is required by DESeq2 for statistical analysis
+metadata$group1 <- as.factor(metadata$group1)
+
+# 4. Set 'conditionA' as the reference level
+# This specifies conditionA as the control group
+metadata$group1 <- relevel(metadata$group1, ref = "conditionA")
+
+# 5. Verify the results
+# Check the header of the metadata and the factor levels
+head(metadata)
+levels(metadata$group1)</code></pre>
+        </section>
+
+        <section class="section" id="phase2">
+          <h2>Phase 2: Transcript Abundance Estimation (Salmon)</h2>
+          <p>
+            Use Salmon within Trinity utility scripts to estimate transcript
+            abundances for all samples.
+          </p>
+
+          <pre><code># Activate Trinity environment
+conda activate trinity
+
+# Condition A1 (Includes --prep_reference to build indices)
+align_and_estimate_abundance.pl --seqType fq \
+  --left conditionA1_1.fastq.gz --right conditionA1_2.fastq.gz \
+  --transcripts trinity_out.Trinity.fasta \
+  --est_method salmon \
+  --trinity_mode \
+  --prep_reference \
+  --output_dir conditionA1
+
+# Condition A2
+align_and_estimate_abundance.pl --seqType fq \
+  --left conditionA2_1.fastq.gz --right conditionA2_2.fastq.gz \
+  --transcripts trinity_out.Trinity.fasta \
+  --est_method salmon \
+  --trinity_mode \
+  --output_dir conditionA2
+
+# Condition A3
+align_and_estimate_abundance.pl --seqType fq \
+  --left conditionA3_1.fastq.gz --right conditionA3_2.fastq.gz \
+  --transcripts trinity_out.Trinity.fasta \
+  --est_method salmon \
+  --trinity_mode \
+  --output_dir conditionA3
+
+# Condition B1
+align_and_estimate_abundance.pl --seqType fq \
+  --left conditionB1_1.fastq.gz --right conditionB1_2.fastq.gz \
+  --transcripts trinity_out.Trinity.fasta \
+  --est_method salmon \
+  --trinity_mode \
+  --output_dir conditionB1
+
+# Condition B2
+align_and_estimate_abundance.pl --seqType fq \
+  --left conditionB2_1.fastq.gz --right conditionB2_2.fastq.gz \
+  --transcripts trinity_out.Trinity.fasta \
+  --est_method salmon \
+  --trinity_mode \
+  --output_dir conditionB2
+
+# Condition B3
+align_and_estimate_abundance.pl --seqType fq \
+  --left conditionB3_1.fastq.gz --right conditionB3_2.fastq.gz \
+  --transcripts trinity_out.Trinity.fasta \
+  --est_method salmon \
+  --trinity_mode \
+  --output_dir conditionB3</code></pre>
+
+          <div class="checklist">
+            <h4>Checklist for abundance output files:</h4>
+            <ul>
+              <li><code>quant.sf</code> files for conditions A1 to B3</li>
+              <li><code>salmon.gene.TMM.EXPR.matrix</code></li>
+              <li><code>salmon.gene.TPM.not_cross_norm</code></li>
+              <li><code>salmon.gene.TPM.not_cross_norm.TMM_info.txt</code></li>
+              <li><code>trinity_out.Trinity.fasta.salmon.idx</code></li>
+              <li><code>salmon.gene.TPM.not_cross_norm.runTMM.R</code></li>
+              <li>
+                <code>salmon.gene.counts.matrix</code> (<strong
+                  >Rename to:</strong
+                >
+                "count_matrix.csv")
+              </li>
+              <li><code>salmon.isoform.TMM.EXPR.matrix</code></li>
+              <li><code>salmon.isoform.TPM.not_cross_norm</code></li>
+              <li>
+                <code>salmon.isoform.TPM.not_cross_norm.TMM_info.txt</code>
+              </li>
+              <li><code>salmon.isoform.TPM.not_cross_norm.runTMM.R</code></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section" id="phase3">
+          <h2>Phase 3: Sequence Alignment and Search (DIAMOND & HMMER)</h2>
+          <p>
+            Run sequence-level similarity searches to uncover alignments in
+            protein databases.
+          </p>
+
+          <pre><code>#!/bin/bash
+# Save as diamond.sh and execute
+# Make sure to adjust paths inside your 'databases/' folder
+
+PEP_FILE="Trinity.transdecoder.pep"
+UNIPROT_DB="databases/uniprot.dmnd" 
+PFAM_DB="databases/Pfam-A.hmm"
+THREADS=4 
+
+# 1. Run DIAMOND blastp against UniProt/SwissProt
+echo "Running DIAMOND blastp against UniProt..."
+diamond blastp \
+    --query "$PEP_FILE" \
+    --db "$UNIPROT_DB" \
+    --out blastp_uniprot.outfmt6 \
+    --outfmt 6 \
+    --evalue 1e-5 \
+    --max-target-seqs 1 \
+    --threads "$THREADS"
+
+# 2. Run hmmscan against Pfam
+echo "Running hmmscan against Pfam..."
+hmmscan \
+    --cpu "$THREADS" \
+    --domtblout pfam.domtblout \
+    "$PFAM_DB" \
+    "$PEP_FILE" > pfam.log
+
+echo "Searches complete!"</code></pre>
+
+          <div class="checklist">
+            <h4>Checklist for aligner outputs:</h4>
+            <ul>
+              <li><code>pfam.domtblout</code></li>
+              <li><code>pfam.log</code></li>
+              <li><code>blastp_uniprot.outfmt6</code></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section" id="phase4">
+          <h2>Phase 4: Functional Annotation Integration</h2>
+
+          <h3>Step 4.1: Trinotate Suite Integration</h3>
+          <pre><code># Activate Trinotate environment
+conda activate trinotate
+
+# Initialize SQLite database
+./databases/Trinotate/Trinotate --db Trinotate.sqlite --init \
+  --gene_trans_map trinity_out.Trinity.fasta.gene_trans_map \
+  --transcript_fasta trinity_out.Trinity.fasta \
+  --transdecoder_pep Trinity.transdecoder.pep
+
+# Load BLASTP results
+./databases/Trinotate/Trinotate --db Trinotate.sqlite --LOAD_swissprot_blastp blastp_uniprot.outfmt6
+
+# Load Pfam domains
+./databases/Trinotate/Trinotate --db Trinotate.sqlite --LOAD_pfam pfam.domtblout
+
+# Generate reports and export files
+./databases/Trinotate/Trinotate --db Trinotate.sqlite --report > final_trinotate_report.xls
+
+# Extract Gene Ontology (GO) mappings
+./databases/Trinotate/util/extract_GO_assignments_from_Trinotate_xls.pl \
+  --Trinotate_xls final_trinotate_report.xls \
+  -G --include_ancestral_terms > gene_ontology_annotations.txt</code></pre>
+
+          <h3>Step 4.2: Eggnog-mapper Execution</h3>
+          <pre><code># Run functional annotation on peptide files
+emapper.py -i Trinity.transdecoder.pep \
+  --output annotation_results \
+  --data_dir /home/users/user00/backup/funannotate_db/ \
+  --cpu 8 \
+  --override</code></pre>
+
+          <div class="checklist">
+            <h4>Checklist for functional outputs:</h4>
+            <ul>
+              <li><code>final_trinotate_report.xls</code></li>
+              <li><code>gene_ontology_annotations.txt</code></li>
+              <li><code>annotation_results.emapper.annotations</code></li>
+              <li><code>annotation_results.emapper.hits</code></li>
+            </ul>
+          </div>
+
+          <h3>Step 4.3: Cleaning and Mapping IDs (R Script)</h3>
+          <p>
+            Resolve mapping conflicts: <code>eggNOG-mapper</code> uses protein
+            IDs, while <code>Trinotate</code> works with Transcript/Gene IDs.
+          </p>
+
+          <pre><code>library(dplyr)
+
+# 1. Load the gene-to-transcript map
+gene_map <- read.delim("trinity_out.Trinity.fasta.gene_trans_map", 
+                       header=FALSE, 
+                       col_names=c("transcript_id", "gene_id"))
+
+# 2. Load eggNOG with manual headers
+col_names <- c("query", "seed_ortholog", "evalue", "score", "eggNOG_OGs", 
+               "max_annot_lvl", "COG_category", "Description", "Preferred_name", 
+               "GOs", "EC", "KEGG_ko", "KEGG_Pathway", "KEGG_Module", 
+               "KEGG_Reaction", "KEGG_rclass", "BRITE", "KEGG_TC", 
+               "CAZy", "BiGG_Reaction", "PFAMs")
+
+eggnog <- read.table("annotation_results.emapper.annotations", 
+                     sep = "\t", 
+                     comment.char = "#", 
+                     header = FALSE, 
+                     col.names = col_names,
+                     check.names = FALSE)
+
+# Clean eggNOG structure
+eggnog_clean <- eggnog %>% 
+  select(gene_id = query, KO_ID = KEGG_ko)
+
+# Clean protein isoforms (strip trailing '.p1', etc.) to map to standard transcript IDs
+eggnog_clean$transcript_id <- gsub("\\.p[0-9]+$", "", eggnog_clean$gene_id)
+
+# Merge eggNOG with gene_map
+eggnog_mapped <- eggnog_clean %>%
+  left_join(gene_map, by = "transcript_id")
+
+# Load Trinotate
+trinotate <- read.delim("final_trinotate_report.xls", sep="\t")
+
+# Final master annotation build
+master_annotation <- trinotate %>%
+  left_join(eggnog_mapped, by = c("X.gene_id" = "transcript_id"))
+
+# Export mappings
+write.csv(master_annotation, "gene_to_KO_mapping.csv", row.names = FALSE)</code></pre>
+
+          <h3>Step 4.4: Integrated Master Annotation</h3>
+          <p>
+            This is where we will integrate everything: DGE statistics (DESeq2),
+            KO/GO mappings, and the Trinotate report to create the complete
+            file.
+          </p>
+
+          <pre><code>library(dplyr)
+library(stringr)
+
+# 1. Load DESeq2 Results
+deseq_res <- read.csv("DESeq2_full_results.csv")
+
+# 2. Function to safely load mapping files
+load_map <- function(filename) {
+  raw_lines <- readLines(filename)
+  split_data <- str_split_fixed(raw_lines, "\t", 2)
+  df <- as.data.frame(split_data, stringsAsFactors = FALSE)
+  colnames(df) <- c("feature_id", "ID")
+  df <- df %>% filter(feature_id != "") %>% mutate(across(everything(), str_trim))
+  return(df)
+}
+
+# 3. Load KO and GO files
+ko_map <- load_map("user_ko.txt")
+colnames(ko_map)[2] <- "KO_id"
+go_map <- load_map("gene_ontology_annotations.txt")
+colnames(go_map)[2] <- "GO_id"
+
+ko_map$clean_id <- gsub("\\.p[0-9]+$", "", ko_map$feature_id)
+go_map$clean_id <- gsub("\\.p[0-9]+$", "", go_map$feature_id)
+
+# 4. Load Trinotate Report
+trinotate <- read.delim("final_trinotate_report.xls", sep="\t", header=TRUE, fill=TRUE, quote="", stringsAsFactors=FALSE)
+trinotate$clean_id <- gsub("\\.p[0-9]+$", "", trinotate$X.gene_id)
+
+# 5. Integrate everything into one Master Table
+master_df <- deseq_res %>%
+  left_join(ko_map %>% select(clean_id, KO_id), by = c("feature_id" = "clean_id")) %>%
+  left_join(go_map %>% select(clean_id, GO_id), by = c("feature_id" = "clean_id")) %>%
+  left_join(trinotate %>% select(clean_id, sprot_Top_BLASTX_hit, Pfam, eggnog, Kegg), 
+            by = c("feature_id" = "clean_id"))
+
+# 6. Save Files
+write.csv(master_df, "Master_Annotation_Complete.csv", row.names = FALSE)
+
+annotated_only <- master_df %>% filter(!is.na(KO_id) | !is.na(GO_id))
+write.csv(annotated_only, "Annotated_Functional_DEGs.csv", row.names = FALSE)
+
+message("Master Annotation and Functional DEG table created successfully.")</code></pre>
+        </section>
+<section class="section" id="ghostkoala-guide">
+  <h2>GhostKOALA Submission Workflow</h2>
+  <p>Follow these steps to submit <code>Trinity.transdecoder.pep</code>and retrieve functional annotation results using GhostKOALA.</p>
+
+  <div class="info-box">
+    <h4>Step 1. Query data input</h4>
+    <p>Enter three items: query sequence data, database file to be searched, and your email address. Then click on <strong>"Request for email confirmation"</strong>.</p>
+    <p>When your request is successfully uploaded, a message of <strong>"Requested accepted"</strong> will appear. Check that your email address is correctly entered.</p>
+    <div style="background: #fdfdfd; border: 1px dashed #cbd5e1; padding: 10px 15px; border-radius: 6px; margin: 10px 0;">
+      <p style="margin: 0; font-weight: 700; color: #2b6cb0;">Request accepted</p>
+      <p style="margin: 5px 0 0 0; font-size: 0.9rem;">An email has been sent to xxxxxx@xxxx.xxx.xx for confirmation.</p>
+      <p style="margin: 5px 0 0 0; font-size: 0.9rem;">Please click on the link in the email to submit your GhostKOALA job.</p>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <h4>Step 2. Job submission</h4>
+    <p>Check your mailbox. You should immediately receive an email from the GhostKOALA server located at the Supercomputer Facility in the Institute for Chemical Research, Kyoto University (scl.kyoto-u.ac.jp).</p>
+    <p>Click the submit link in the message to submit your job. Your job will be queued on the GhostKOALA server. The execution time varies depending on how many other jobs are running.</p>
+  </div>
+
+  <div class="info-box">
+    <h4>Step 3. Accessing result data</h4>
+    <p>When your job is completed, you will receive a notification email. Click on the link in the message to access your result summary page, which consists of two sections: <strong>Annotation data (and KEGG Mapper)</strong> and <strong>Taxonomy data</strong>.</p>
+    
+    <!-- Idinagdag dito ang instruksyon para sa user_ko.txt -->
+    <div class="output-box" style="margin-top: 15px;">
+      <strong>Important File Output Instruction:</strong>
+      <p style="margin: 5px 0 0 0;">Download your functional annotation results from GhostKOALA and save/rename the output file as <code>user_ko.txt</code>. This file is required as an input for the downstream R scripts in the pipeline.</p>
+    </div>
+  </div>
+
+  <div class="checklist" style="margin-top: 20px;">
+    <h4>Citation Reference</h4>
+    <p style="font-size: 0.9rem; margin: 0;">Please cite the following reference when you make use of BlastKOALA/GhostKOALA:</p>
+    <p style="font-size: 0.88rem; font-style: italic; margin: 8px 0 0 0;">
+      Kanehisa, M., Sato, Y., and Morishima, K.; BlastKOALA and GhostKOALA: KEGG tools for functional characterization of genome and metagenome sequences. J. Mol. Biol. 428, 726-731 (2016). [pubmed] [pdf]
+    </p>
+  </div>
+        <section class="section" id="phase5">
+          <h2>
+            Phase 5: Differential Expression and Pathway Analysis (DESeq2)
+          </h2>
+          <p>
+            Perform the downstream calculations in RStudio using the
+            reproducible script.
+          </p>
+          <pre><code># --- Internship Activity - Transcriptome Analysis Workflow (FINAL & UNIFIED) ---
+
+# ==========================================
+# 0. LOAD REQUIRED LIBRARIES
+# ==========================================
+library(DESeq2); library(clusterProfiler); library(ggplot2); library(readr); library(tibble)
+library(pheatmap); library(tidyr); library(enrichplot); library(pathview); library(AnnotationDbi)
+library(dplyr); library(stringr); library(KEGGREST); library(GO.db)
+
+# Configuration
+output_dir <- "D:/deseqinputs/analysis_results"
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+
+# ==========================================
+# Step 1 & 2: DESeq2 Analysis
+# ==========================================
+message("Running DESeq2...")
+count_matrix <- read.csv("count_matrix.csv", row.names = 1)
+metadata <- read.csv("metadata.csv", row.names = 1)
+metadata$group1 <- relevel(as.factor(metadata$Treatment), ref = "conditionA")
+
+dds <- DESeqDataSetFromMatrix(countData = count_matrix, colData = metadata, design = ~ group1)
+dds <- DESeq(dds, test = "Wald")
+res <- results(dds, contrast = c("group1", "conditionB", "conditionA"))
+res_df <- as.data.frame(res) %>% rownames_to_column("feature_id") %>%
+  mutate(direction = case_when(pvalue < 0.05 & log2FoldChange > 0.5 ~ "Up",
+                               pvalue < 0.05 & log2FoldChange < -0.5 ~ "Down",
+                               TRUE ~ "Not_DE"))
+res_df$feature_id <- gsub("\\.p[0-9]+$", "", res_df$feature_id)
+
+# ==========================================
+# Step 3: Master Annotation & Mapping Prep
+# ==========================================
+message("Preparing Annotations and Master Table...")
+
+# Safe file loading function
+load_map <- function(filename) {
+  raw_lines <- readLines(filename)
+  split_data <- str_split_fixed(raw_lines, "\t", 2)
+  df <- as.data.frame(split_data, stringsAsFactors = FALSE)
+  colnames(df) <- c("feature_id", "ID")
+  df <- df %>% filter(feature_id != "") %>% mutate(across(everything(), str_trim))
+  return(df)
+}
+
+# Load mappings
+ko_map <- load_map("user_ko.txt")
+colnames(ko_map) <- c("feature_id", "KO_id")
+go_map <- load_map("gene_ontology_annotations.txt")
+colnames(go_map) <- c("feature_id", "GO_id")
+
+ko_map$clean_id <- gsub("\\.p[0-9]+$", "", ko_map$feature_id)
+go_map$clean_id <- gsub("\\.p[0-9]+$", "", go_map$feature_id)
+
+# Load Trinotate
+trinotate <- read.delim("final_trinotate_report.xls", sep="\t", header=TRUE, fill=TRUE, quote="", stringsAsFactors=FALSE)
+trinotate$clean_id <- gsub("\\.p[0-9]+$", "", trinotate$X.gene_id)
+
+# Create Master Annotation Table
+master_df <- res_df %>%
+  left_join(ko_map %>% select(clean_id, KO_id), by = c("feature_id" = "clean_id")) %>%
+  left_join(go_map %>% select(clean_id, GO_id), by = c("feature_id" = "clean_id")) %>%
+  left_join(trinotate %>% select(clean_id, sprot_Top_BLASTX_hit, Pfam, eggnog, Kegg), 
+            by = c("feature_id" = "clean_id"))
+
+write.csv(master_df, file.path(output_dir, "Master_Annotation_Complete.csv"), row.names = FALSE)
+
+# Prepare mapping for enricher
+ko_to_path <- bitr_kegg(unique(ko_map$KO_id), fromType="kegg", toType="Path", organism="ko")
+path_to_gene <- merge(ko_to_path, ko_map, by.x="kegg", by.y="KO_id")
+kegg_term2gene <- path_to_gene[, c("Path", "feature_id")]
+go_term2gene <- go_map[, c("GO_id", "clean_id")]
+
+# Prepare Gene Lists
+genes_up <- res_df$feature_id[res_df$direction == "Up"]
+genes_down <- res_df$feature_id[res_df$direction == "Down"]
+genes_all <- res_df$feature_id[res_df$direction %in% c("Up", "Down")]
+
+# ==========================================
+# Step 4: Individual GO and KEGG Plots (WITH PROPER NAMES)
+# ==========================================
+message("Generating Enrichment Plots...")
+
+# --- GO ALL PLOT ---
+go_res <- enricher(gene = genes_all, TERM2GENE = go_term2gene, pvalueCutoff = 1, qvalueCutoff = 1)
+if (!is.null(go_res) && nrow(go_res@result) > 0) {
+  raw_go_ids <- as.character(go_res@result$ID)
+  clean_go_ids <- str_extract(raw_go_ids, "GO:[0-9]{7}")
+  go_names <- mapIds(GO.db, keys=clean_go_ids, column="TERM", keytype="GOID", multiVals="first")
+  go_names[is.na(go_names)] <- raw_go_ids[is.na(go_names)]
+  go_res@result$Description <- unname(go_names)
+  
+  p_go <- dotplot(go_res, showCategory=15) + ggtitle("Dot Plot: GO_All") +
+    scale_y_discrete(labels = function(x) str_wrap(x, width = 45)) + theme(axis.text.y = element_text(size = 9))
+  ggsave(file.path(output_dir, "GO_All_DotPlot_Final.png"), p_go, width=8, height=8)
+}
+
+# --- FETCH KEGG NAMES ---
+kegg_info <- keggList("pathway", "ko")
+names(kegg_info) <- str_replace(names(kegg_info), "path:", "")
+
+# --- KEGG UP PLOT ---
+kegg_up <- enricher(gene = genes_up, TERM2GENE = kegg_term2gene, pvalueCutoff = 1, qvalueCutoff = 1)
+if (!is.null(kegg_up) && nrow(kegg_up@result) > 0) {
+  up_ids <- as.character(kegg_up@result$ID)
+  up_names <- unname(kegg_info[up_ids])
+  up_names[is.na(up_names)] <- up_ids[is.na(up_names)]
+  kegg_up@result$Description <- up_names
+  
+  p_up <- dotplot(kegg_up, showCategory=15) + ggtitle("Dot Plot: KEGG_Up") +
+    scale_y_discrete(labels = function(x) str_wrap(x, width = 45)) + theme(axis.text.y = element_text(size = 9))
+  ggsave(file.path(output_dir, "KEGG_Up_DotPlot_Final.png"), p_up, width=8, height=8)
+}
+
+# --- KEGG DOWN PLOT ---
+kegg_down <- enricher(gene = genes_down, TERM2GENE = kegg_term2gene, pvalueCutoff = 1, qvalueCutoff = 1)
+if (!is.null(kegg_down) && nrow(kegg_down@result) > 0) {
+  down_ids <- as.character(kegg_down@result$ID)
+  down_names <- unname(kegg_info[down_ids])
+  down_names[is.na(down_names)] <- down_ids[is.na(down_names)]
+  kegg_down@result$Description <- down_names
+  
+  p_down <- dotplot(kegg_down, showCategory=15) + ggtitle("Dot Plot: KEGG_Down") +
+    scale_y_discrete(labels = function(x) str_wrap(x, width = 45)) + theme(axis.text.y = element_text(size = 9))
+  ggsave(file.path(output_dir, "KEGG_Down_DotPlot_Final.png"), p_down, width=8, height=8)
+}
+
+# --- PAIRWISE KEGG PLOT ---
+gene_list_split <- list(Up = genes_up, Down = genes_down)
+kegg_term2name <- ko2name(unique(kegg_term2gene$Path))
+colnames(kegg_term2name) <- c("Path", "Name")
+kegg_term2name$Name <- paste0(kegg_term2name$Path, " (", kegg_term2name$Name, ")")
+
+ck <- compareCluster(geneCluster = gene_list_split, fun = "enricher", TERM2GENE = kegg_term2gene,
+                     TERM2NAME = kegg_term2name, pvalueCutoff = 1, qvalueCutoff = 1)
+ggsave(file.path(output_dir, "Pairwise_KEGG_Dotplot.png"), dotplot(ck, showCategory=20) + ggtitle("Pairwise KEGG: Pathway & ID Integration"))
+
+# ==========================================
+# Step 5: Final Pathview Mapping
+# ==========================================
+message("Generating Pathview maps...")
+lfc_ko <- setNames(res_df$log2FoldChange[match(ko_map$feature_id, res_df$feature_id)], ko_map$KO_id)
+lfc_ko <- lfc_ko[!is.na(names(lfc_ko))]
+
+sig_df <- as.data.frame(ck)
+valid_paths <- unique(str_extract(sig_df$ID, "[0-9]{5}")[!is.na(str_extract(sig_df$ID, "[0-9]{5}"))])
+
+if(length(valid_paths) > 0) {
+  for (pid in head(valid_paths, 3)) { 
+    tryCatch({
+      pathview(gene.data = lfc_ko, pathway.id = pid, species = "ko", gene.idtype = "KEGG", dest.dir = output_dir, kegg.native = TRUE)
+    }, error = function(e) message("Pathview failed for ", pid, ": ", e$message))
+  }
+}
+
+# ==========================================
+# Step 6: Volcano Plot
+# ==========================================
+res_df$sig <- ifelse(res_df$pvalue < 0.05 & abs(res_df$log2FoldChange) > 0.5, "Significant", "Not Significant")
+p_volcano <- ggplot(res_df, aes(x=log2FoldChange, y=-log10(pvalue), color=sig)) + 
+  geom_point(alpha=0.6) + theme_minimal() + ggtitle("Volcano Plot")
+ggsave(file.path(output_dir, "Volcano_Plot.png"), p_volcano)
+
+message("Workflow Complete! All fixed plots and master tables are saved in: ", output_dir)</code></pre>
+
+          <div class="checklist">
+            <h4>Checklist for downstream outputs:</h4>
+
+            <h3>1. Statistical & Annotation Files</h3>
+            <ul>
+              <li>
+                <code
+                  ><a
+                    href="https://drive.google.com/file/d/1D6BI264nLAjSqa6FcPBvAt2od5QpIluP/view?usp=drive_link"
+                    >DESeq2_full_results.csv</a
+                  ></code
+                >
+                - Statistical test results for all features
+              </li>
+              <li>
+                <code
+                  ><a
+                    href="https://drive.google.com/file/d/1zcMW6vRmLTgPDsFrc-KelmMSLtt9u9Pg/view?usp=drive_link"
+                    >Master_Annotation_Complete.csv</a
+                  ></code
+                >
+                - Comprehensive transcriptomic dataset
+              </li>
+              <li>
+                <code><a href="https://drive.google.com/file/d/1S9Fhoac_g9ecVWWF8ErdtRpVdQCGZgw2/view?usp=drive_link">Annotated_Functional_DEGs.csv</a></code> - Filtered subset of
+                significant differentially expressed genes
+              </li>
+            </ul>
+
+            <h3>2. Functional Enrichment Tables (Obj 6)</h3>
+            <ul>
+              <li><strong>KEGG Enrichment:</strong></li>
+              <ul>
+                <li>
+                  <code
+                    ><a
+                      href="https://drive.google.com/file/d/1enXS4-nNG2r22uzPfiP2VpzULysc8-ml/view?usp=sharing"
+                      >KEGG_All_Enrichment.tsv</a
+                    ></code
+                  >
+                  - Statistical table summarizing all KEGG pathways
+                </li>
+                <li>
+                  <code
+                    ><a
+                      href="https://drive.google.com/file/d/1LXyK-eJFsotxhKu0AoQP1csSjPa_BHA5/view?usp=sharing"
+                      >KEGG_Up_Enrichment.tsv</a
+                    ></code
+                  >
+                  - Pathways significantly up-regulated
+                </li>
+                <li>
+                  <code
+                    ><a
+                      href="https://drive.google.com/file/d/1Dd_3bXBHRxfMZ_n2q9FcB10wNpcIo_W_/view?usp=drive_link"
+                      >KEGG_Down_Enrichment.tsv</a
+                    ></code
+                  >
+                  - Pathways significantly down-regulated
+                </li>
+              </ul>
+              <li><strong>GO Enrichment:</strong></li>
+              <ul>
+                <li>
+                  <code
+                    ><a
+                      href="https://drive.google.com/file/d/1kJgKWM_rk5gJ6Px1jCDI5bxQHJxygrJf/view?usp=drive_link"
+                      >GO_All_Enrichment.tsv</a
+                    ></code
+                  >
+                  - Gene Ontology terms enriched across the full DEG set
+                </li>
+              </ul>
+            </ul>
+
+            <h3>3. Visualization Outputs (Obj 8)</h3>
+            <ul>
+              <li>
+                <code><a href="#volcano-1-section">Volcano map 1.png</a></code>
+                - Statistical plot displaying magnitude of fold-change vs
+                significance
+              </li>
+              <li>
+                <code><a href="#volcano-2-section">Volcano map 2.png</a></code>
+                - Secondary or alternate statistical plot displaying fold-change
+                vs significance
+              </li>
+              <li>
+                <code><a href="#ma-section">MA_plot.png</a></code> -
+                Visualization of mean expression levels vs log-fold changes
+              </li>
+              <li>
+                <code><a href="#heatmap-section">DEG_Heatmap.png</a></code> -
+                Clustered visual representation showing differential expression
+                patterns
+              </li>
+              <li>
+                <code
+                  ><a href="#dispersion-section"
+                    >Dispersion-estimation plot.png</a
+                  ></code
+                >
+                - Plot of estimated dispersions of gene expressions
+              </li>
+              <li>
+                <code><a href="#go-all-section">GO_All_DotPlot.png</a></code> -
+                Graphical representation of Gene Ontology enrichment
+                significance
+              </li>
+              <li>
+                <code
+                  ><a href="#kegg-all-section">KEGG_All_DotPlot.png</a></code
+                >
+                - Visualization of all enriched KEGG pathways sorted by
+                significance
+              </li>
+              <li>
+                <code><a href="#kegg-up-section">KEGG_Up_DotPlot.png</a></code>
+                - Visualization of up-regulated enriched KEGG pathways
+              </li>
+              <li>
+                <code
+                  ><a href="#kegg-down-section">KEGG_Down_DotPlot.png</a></code
+                >
+                - Visualization of down-regulated enriched KEGG pathways
+              </li>
+              <li>
+                <code
+                  ><a href="#pairwise-section"
+                    >Pairwise_KEGG_Dotplot.png</a
+                  ></code
+                >
+                - Comparative enrichment visual across different gene clusters
+              </li>
+              <li>
+                <code><a href="#kegg50-section">ko05150.pathview.png</a></code>
+                - Visual mapping of the S. aureus infection pathway showing
+                fold-changes[cite: 1]
+              </li>
+              <li>
+                <code><a href="#kegg61-section">ko04610.pathview.png</a></code>
+                - Visual heatmap overlay of the complement and coagulation
+                cascades pathway[cite: 1]
+              </li>
+              <li>
+                <code><a href="#kegg36-section">ko04136.pathview.png</a></code>
+                - Visual mapping of the autophagy pathway highlighting
+                expression changes[cite: 1]
+              </li>
+            </ul>
+            <h3>4. Documentation (Final Reporting)</h3>
+            <ul>
+              <li>
+                <code><a href="https://drive.google.com/file/d/1s_Da9NFCUjFgbCROu6KYYYn40OarwgYr/view?usp=drive_link">Interpretation_Notes.txt</a></code> - Brief qualitative
+                summary and biological insights
+              </li>
+              <li>
+                <code><a href="https://drive.google.com/file/d/1CTxi3mrMl6sOHYdyNutdcbMHRbhytrXp/view?usp=drive_link">R Script Usage Instructions.txt</a></code> - Usage instructions and pipeline
+                dependencies
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- VISUALS SECTION -->
+        <section class="section" id="visuals-section">
+          <h2>Result Visualizations & Plots</h2>
+
+          <!-- 1. Volcano Plot 1 -->
+          <div id="volcano-1-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for Volcano map 1.png"
+                src="https://i.imgur.com/I9l7VKO.png"
+              />
+              <figcaption>
+                <strong style="font-size: 1.1em; color: var(--pgc-dark)"
+                  >Volcano map 1.png</strong
+                ><br />
+                <code>Fold-change vs significance</code>
+                <ul style="margin: 8px 0 0 18px; padding: 0">
+                  <li>
+                    <strong>Differential Expression Overview</strong> Evaluates
+                    differential gene expression between Condition B and
+                    Condition A (using Condition A as the reference/control
+                    group)
+                  </li>
+                  <li>
+                    <strong>Transcriptional Remodeling</strong> Displays a
+                    remarkably balanced distribution between up-regulated (blue)
+                    and down-regulated (red) features, indicating widespread
+                    bi-directional shifts rather than a one-sided shutdown or
+                    global overexpression.
+                  </li>
+                  <li>
+                    <strong>Extreme Outliers</strong> Features prominent
+                    extreme outliers on both sides past +20 and -20 log_2 fold-change,
+                    representing heavily shifted transcripts tied to specific
+                    pathway responses.
+                  </li>
+                  <li>
+                    <strong>Statistical Meaning</strong> Multiple points extend
+                    well past common significance thresholds (y = 5,
+                    corresponding to p_adj  < 10^-5, confirming
+                    high statistical robustness for downstream KEGG/GO pathway
+                    mapping.
+                  </li>
+                </ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 2. Volcano Plot 2 -->
+          <div id="volcano-2-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for Volcano map 2.png"
+                src="https://i.imgur.com/u0hsIvV.png"
+              />
+              <figcaption>
+                <strong>Volcano map 2.png</strong><br />
+                <code>Fold-change vs significance</code><br />
+                Example volcano plot 2
+                <ul style="margin: 8px 0 0 18px; padding: 0">
+                  <li>
+                    <strong>Transcriptional Remodeling</strong> A massive cloud
+                    of cyan points reaches far up the vertical axis (extending
+                    past y = 10, 15, and approaching 20). This indicates
+                    that thousands of genes have  strong
+                    statistical support.
+                  </li>
+                  <li>
+                    <strong>Bi-Directional Symmetry</strong> The distribution of
+                    significant DEGs is visibly balanced between the left
+                    (down-regulated) and right (up-regulated) halves. This
+                    confirms a coordinated cellular reprogramming or remodeling
+                    response rather than a generalized one-sided overexpression
+                    or shutdown.
+                  </li>
+                </ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 3. MA Plot -->
+          <div id="ma-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for MA_plot.png"
+                src="https://i.imgur.com/ka3cDd5.png"
+              />
+              <figcaption>
+                <strong>MA_plot.png</strong><br />
+                <code>Mean-difference plot</code><br />
+                <ul style="margin: 8px 0 0 18px; padding: 0">
+                  <li>
+                    <strong>Axis Limits & Data Range</strong>
+                    The Y-axis is bounded between -2 and +2, where points clustering near the extreme top and bottom edges represent highly shifted transcripts whose fold changes extend beyond this plotting window. The bulk of the non-significant points (grey) remain symmetrically centered along the zero log-fold change line, indicating stable baseline normalization.                  </li>
+                  <li>
+                    <strong> Spread Across Expression Bins</strong> Significant
+                    DEGs (blue points) are distributed across various expression
+                    levels—from moderately low counts (10^1 to 10^2) up to
+                    high abundance levels (10^3 to 10^4). This shows that
+                    differential regulation occurs across both rare and
+                    abundantly expressed transcripts.
+                  </li>
+                </ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 4. DEG Heatmap -->
+          <div id="heatmap-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for DEG_Heatmap.png"
+                src="https://i.imgur.com/8462wY6.png"
+              />
+              <figcaption>
+                <strong>DEG_Heatmap.png</strong><br />
+                <code>Clustered heatmap</code><br />
+                <ul style="margin: 8px 0 0 18px; padding: 0">
+                  <li>
+                    <strong>Replicate Consistency</strong>
+                    The column dendrogram shows complete separation between
+                    conditionB and conditionA without any intermixing of
+                    replicates. This indicates minimal technical noise and high
+                    biological reproducibility within each group.
+                  </li>
+                  <li>
+                    <strong>Two Main Expression Clusters (Gene-wise)</strong
+                    > Cluster 1 (Top rows, roughly 12 transcripts) - Show low
+                    expression (blue) in all conditionA samples, but are
+                    up-regulated (yellow to orange) in all conditionB samples.
+                    These represent genes activated or induced during Condition
+                    B. 
+                    <br>
+                    Cluster 2 (Bottom rows, roughly 8 transcripts) - Show high
+                    expression (red to orange) in all conditionA replicates, but
+                    are sharply down-regulated (blue) in all conditionB
+                    replicates. These represent baseline transcripts suppressed
+                    during the transition to Condition B.
+                  </li>
+                  <li>
+                    <strong>Marker Transcripts Identification</strong> Specific
+                    transcripts like TRINITY_DN616_c0_g1_i6 and
+                    TRINITY_DN845_c1_g1_i2 exhibit very high expression (bright
+                    red) specifically under Condition A, making them strong
+                    candidate marker genes for baseline maintenance or
+                    suppression targets. Conversely, transcripts like
+                    TRINITY_DN1095_c0_g1_i6 show strong activation specifically
+                    under Condition B.
+                  </li>
+                </ul> 
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 5. Dispersion Plot -->
+          <div id="dispersion-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for Dispersion-estimation plot.png"
+                src="https://i.imgur.com/25ryW4V.png"
+              />
+              <figcaption>
+                <strong>Dispersion-estimation plot.png</strong><br />
+                <code>Dispersion estimation</code>
+                <ul style="margin: 8px 0 0 18px; padding: 0">
+                  <li>
+                    <strong>Inverse Relationship with Mean Expression</strong>
+                    As expected in RNA-Seq data, genes with low expression (left
+                    side) exhibit a wide spread of high dispersion values due to
+                    higher technical noise. As expression increases (moving
+                    right), dispersion decreases and tightly converges toward a
+                    lower, stable baseline.
+                  </li>
+                  <li>
+                    <strong>Goodness of Fit (Red Trend Line)</strong> The red
+                    fitted curve smoothly captures the overall downward trend of
+                    the gene-wise estimates as expression increases, stabilizing
+                    horizontally at higher expression tiers. This confirms that
+                    the parametric fit accurately models the variance trend of
+                    the dataset.
+                  </li>
+                  <li>
+                    <strong>Shrinkage Behavior (Blue Points)</strong> The blue
+                    points (final) show how DESeq2 shrinks gene-wise estimates
+                    toward the red fitted curve. Genes with high or erratic
+                    variability have their dispersion estimates adjusted
+                    downward or toward the trend to prevent false positives,
+                    while genes closely matching the trend remain anchored. The
+                    tight clustering of blue points around the red trend line
+                    validates that the model is well-conditioned for downstream
+                    Wald or likelihood ratio testing.
+                  </li>
+                </ul>
+                <br />
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 6. GO All DotPlot -->
+          <div id="go-all-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for GO_All_DotPlot.png"
+                src="https://i.imgur.com/TURydqi.png"
+              />
+              <figcaption>
+                <strong>GO_All_DotPlot.png</strong><br />
+                <code>GO Enrichment</code><br />
+                <ul style="margin: 8px 0 0 18px; padding: 0">
+                  <li>
+                    <strong>Statistical Meaning</strong>
+                    The enrichment is statistically non-significant because the
+                    adjusted p-value (approx 0.85) is far
+                    above the standard significance threshold (p < 0.05).
+                    <br />
+                    The extremely low gene counts (only 1 to 3 genes per
+                    category) and narrow gene ratios reflect sparse functional
+                    annotation matching within the <i> de novo</i> transcriptome
+                    dataset.
+                  </li>
+                </ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 7. KEGG All DotPlot -->
+          <div id="kegg-all-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for KEGG_All_DotPlot.png"
+                src="https://i.imgur.com/mZ8Wc4k.png"
+              />
+              <figcaption>
+                <strong>KEGG_All_DotPlot.png</strong><br />
+                <code> All enriched KEGG pathways</code><br />
+                <ul style="margin: 8px 0 0 18px; padding: 0">
+                  <li>
+                    <strong
+                      >Top-Ranking Pathways (Highest Significance &
+                      Ratio)</strong
+                    >
+                    ECM-receptor interaction and Complement and coagulation
+                    cascades appear at the very top with the highest GeneRatio
+                    values (~0.02 to 0.023) and deepest red coloring
+                    (p_ adj < 1e-04). This points to massive
+                    structural remodeling of the extracellular matrix and heavy
+                    activation of immune/inflammatory defense mechanisms during
+                    the condition shift.
+                  </li>
+                  <li>
+                    <strong>Metabolic and Xenobiotic Reprogramming</strong>
+                    A substantial group of enriched pathways involves metabolism and detoxification (e.g., PPAR signaling, cholesterol metabolism, and cytochrome P450 pathways). This indicates that the transition between Condition A and Condition B strongly disrupts lipid handling, endocrine balance, and chemical clearance.
+                  </li>
+                  <li>
+                    <strong>Cellular Maintenance and Proliferation:</strong
+                    >Pathways like Autophagy - other, DNA replication, and Biosynthesis of unsaturated fatty acids also show significant enrichment. This suggests that the organism adjusts its basic cellular recycling, macromolecular synthesis, and growth systems as part of its overall response.
+                  </li>
+                </ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 8. KEGG Up DotPlot -->
+          <div id="kegg-up-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for KEGG_Up_DotPlot.png"
+                src="https://i.imgur.com/xlKmsbI.png"
+              />
+              <figcaption>
+                <strong>KEGG_Up_DotPlot.png</strong><br />
+                <code>KEGG Up Enrichment</code><br />
+              <ul style="margin: 8px 0 0 18px; padding: 0">
+  <li>
+    <strong>Top-Ranking Pathways (Highest Significance & Ratio)</strong>
+    ECM-receptor interaction and Complement and coagulation cascades appear at
+    the very top with the highest GeneRatio values (approximately 0.02 to
+    0.023) and deepest red coloring (adjusted p-value < 1 × 10⁻⁴). This points
+    to massive structural remodeling of the extracellular matrix and heavy
+    activation of immune and inflammatory defense mechanisms during the
+    condition shift.
+  </li>
+
+  <li>
+    <strong>Dominant Activation of Immune and Inflammatory Defense:</strong>
+    Complement and coagulation cascades ranks at the very top with the highest
+    gene ratio (approximately 0.035), largest gene count (approaching 70 genes),
+    and the most intense red significance color (adjusted p-value < 1 × 10⁻¹³).
+    This indicates a massive mobilization of host humoral defense, blood
+    clotting factors, and acute-phase inflammatory responses in Condition B.
+  </li>
+
+  <li>
+    <strong>Robust Signaling and Immune Cell Differentiation</strong>
+    Key regulatory cascades, such as JAK-STAT signaling pathway, Th17 cell
+    differentiation, and NF-kappa B signaling pathway show prominent enrichment
+    with high gene ratios and large gene counts. This reflects active cytokine
+    signaling, cellular communication, and adaptive immune coordination.
+  </li>
+
+  <li>
+    <strong>Pathogen-Host Interaction and Infection Response</strong>
+    Several pathways tied to infectious diseases—specifically <i>Staphylococcus
+    aureus</i> infection, Pertussis, Legionellosis, and Systemic lupus
+    erythematosus—are significantly enriched among the up-regulated genes. This
+    aligns directly with your Pathview mapping results (e.g., <i>S. aureus</i>
+    infection and complement cascades), suggesting that the organism mounts a
+    strong defense or stress-response signature that mimics pathogen clearance
+    mechanisms.
+  </li>
+
+  <li>
+    <strong>Cellular Maintenance, Quality Control, and Autophagy</strong>
+    Protein synthesis machinery (Ribosome), alongside cellular degradation and
+    recycling systems (Mitophagy - animal, Autophagy - yeast, and Autophagy -
+    other), are heavily up-regulated. This implies that the transition to
+    Condition B triggers intense cellular housekeeping, clearing damaged
+    organelles, and remodeling intracellular components to cope with
+    physiological stress.
+  </li>
+</ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 9. KEGG Down DotPlot -->
+          <div id="kegg-down-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for KEGG_Down_DotPlot.png"
+                src="https://i.imgur.com/nVZQHUe.png"
+              />
+              <figcaption>
+                <strong>KEGG_Down_DotPlot.png</strong><br />
+<ul style="margin: 8px 0 0 18px; padding: 0">
+  <li>
+    <strong>Top-Ranking Supressed Pathway(ECM-Receptor Interaction)</strong>
+    ECM-receptor interaction ranks at the very top with the highest gene ratio (approximately 0.035), largest gene count (around 60 genes), and the most intense red significance color (adjusted p-value < 1 × 10⁻¹⁰). This indicates that transitioning to Condition B involves a major shutdown or reduction of extracellular matrix remodeling, cell adhesion, and structural scaffolding processes.
+  </li>
+
+  <li>
+    <strong>Repression of Xenobiotic Clearance and Drug Metabolism</strong>
+    A major cluster of down-regulated pathways is involved in detoxification and chemical processing, including Drug metabolism - other enzymes, Metabolism of xenobiotics by cytochrome P450, Chemical carcinogenesis - DNA adducts, and Drug metabolism - cytochrome P450. This suggests that baseline xenobiotic handling and cellular metabolic defense enzymes are actively suppressed.
+  </li>
+
+  <li>
+    <strong>Downregulation of Core Biosynthetic and Metabolic Pathways</strong>
+    Essential metabolic building blocks are broadly suppressed, as seen in the enrichment of Biosynthesis of amino acids, Glutathione metabolism, Cysteine and methionine metabolism, and One carbon pool by folate. This indicates a metabolic slowdown, redirection of resources, or conservation mode where general anabolism is scaled back.
+  </li>
+
+  <li>
+    <strong>Suppression of Proliferation and Lipid Synthesis</strong>
+    Pathways linked to cell division and growth like DNA replication, alongside lipid synthesis pathways, such as Biosynthesis of unsaturated fatty acids and Steroid biosynthesis, show significant down-regulation. This aligns with the cellular reallocation away from baseline maintenance and growth toward specialized responses.
+  </li>
+</ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 10. Pairwise KEGG DotPlot -->
+          <div id="pairwise-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Placeholder for Pairwise_KEGG_Dotplot.png"
+                src="https://i.imgur.com/yDa6kFt.png"
+              />
+              <figcaption>
+                <strong>Pairwise_KEGG_Dotplot.png</strong><br />
+                <code>KEGG Pairwise Enrichment</code><br />
+<ul style="margin: 8px 0 0 18px; padding: 0">
+  <li>
+    <strong>Top-Ranking Suppressed Pathway (Complement and Coagulation Cascades)</strong>
+    Complement and coagulation cascades rank at the very top of the Down cluster with the largest circle size (representing a high gene count/ratio) and an intense red significance color (adjusted p-value < 1 × 10⁻¹²). This indicates that transitioning to the condition involves a major shutdown or reduction of immune surveillance, inflammatory responses, and plasma protein regulation processes.
+  </li>
+
+  <li>
+    <strong>Repression of Drug Metabolism and Xenobiotic Clearance</strong>
+    A major cluster of down-regulated pathways at the bottom is involved in detoxification and chemical processing, including Drug metabolism - other enzymes, Metabolism of xenobiotics by cytochrome P450, and Drug metabolism - cytochrome P450, displaying strong statistical significance (red color). This suggests that baseline xenobiotic handling and cellular metabolic defense enzymes are actively suppressed.
+  </li>
+
+  <li>
+    <strong>Downregulation of Core Biosynthetic and Metabolic Pathways</strong>
+    Essential metabolic building blocks are broadly suppressed in the Down cluster, as seen in the enrichment of Biosynthesis of amino acids, Glutathione metabolism, Cysteine and methionine metabolism, and Steroid biosynthesis. This indicates a metabolic slowdown, redirection of resources, or conservation mode where general anabolism is scaled back.
+  </li>
+
+  <li>
+    <strong>Suppression of Specialized Lipid and Chemical Carcinogenesis Pathways</strong>
+    Pathways linked to specialized metabolic processing like Chemical carcinogenesis - DNA adducts and Biosynthesis of unsaturated fatty acids show significant down-regulation with high significance values. This aligns with the cellular reallocation away from baseline maintenance and growth toward specialized responses.
+  </li>
+</ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 11. ko05150 (Retained) -->
+          <div id="kegg50-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Example output image: ko05150.pathview.png"
+                src="https://i.imgur.com/NcQNUR1.png"
+              />
+              <figcaption>
+                <strong>ko05150.pathview.png</strong><br />
+                <code> <i>S. aureus</i> infection pathway</code><br />
+<ul style="margin: 8px 0 0 18px; padding: 0">
+  <li>
+    <strong>Overview of Upregulation (Red)</strong>
+    The vast majority of the highlighted genes and components in this pathway
+    are colored red, indicating that they are upregulated in this condition.
+    This points to strong activation of host-pathogen interaction mechanisms,
+    involving complement cascades, immune recognition factors, and
+    inflammatory signaling.
+  </li>
+
+  <li>
+    <strong>Complement and Coagulation Cascades Activation</strong>
+    Crucial components at the top of the pathway—including C3, C2, C4, C5,
+    C1Q, C1R, C1S, and complement factors such as BF, DF, and CFP (HF)—are
+    prominently colored red. This signifies intensive activation of the
+    complement system, representing a major arm of the innate immune defense
+    against bacterial invasion.
+  </li>
+
+  <li>
+    <strong>Downregulated Components (Green)</strong>
+    Only a few pathway components are colored green, indicating
+    downregulation. Notable examples include MBL (Mannose-binding lectin) in
+    the lectin pathway, KRT10 associated with epithelial cells, and
+    P-selectin on endothelial cells. This selective suppression suggests
+    specific regulatory or evasion mechanisms operating within the broader
+    inflammatory response.
+  </li>
+
+  <li>
+    <strong>Receptors and Inflammatory Signaling</strong>
+    Key immune receptors and cell surface molecules—including C5aR, C3aR,
+    ITGA/ITGB2 on neutrophils, major histocompatibility complex components
+    (MHC-II), and PAF-R—show clear red upregulation. This highlights active
+    leukocyte recruitment, enhanced cell adhesion, antigen presentation, and
+    pro-inflammatory signaling during the infection process.
+  </li>
+</ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 12. ko04610 (Retained) -->
+          <div id="kegg61-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Example output image: ko04610.pathview.png"
+                src="https://i.imgur.com/oJxJ582.png"
+              />
+              <figcaption>
+                <strong>ko04610.pathview.png</strong><br />
+                <code>Complement cascades</code><br />
+<ul style="margin: 8px 0 0 18px; padding: 0">
+  <li>
+    <strong>Extensive Upregulation of the Complement Cascade</strong>
+    The right side of the diagram, representing the classical, lectin, and
+    alternative complement pathways, is heavily dominated by red nodes,
+    including C3, C4, C2, C5, FB, FD, and the terminal membrane attack complex
+    components (C6, C7, C8, and C9). This indicates robust activation of the
+    complement system and a strong induction of innate immune defense
+    mechanisms.
+  </li>
+
+  <li>
+    <strong>Complement Receptors and Effector Function Activation</strong>
+    Key complement receptors and regulatory proteins—including C3AR1, CR1,
+    CR2, CR3, CR4, and C5AR1—are predominantly upregulated (red). This
+    suggests enhanced downstream immune functions such as chemotaxis,
+    degranulation, phagocytosis, and B-cell receptor signaling.
+  </li>
+
+  <li>
+    <strong>Coagulation and Intrinsic/Extrinsic Pathway Mixed Response</strong>
+    The left side of the pathway, representing the coagulation cascade,
+    displays a combination of upregulated factors (F7, F10, F3/TF, F5,
+    F2/Thrombin, and Fibrinogen) and downregulated components (F9, KLKB1,
+    B1, and B2). This mixed expression pattern indicates selective regulation
+    of clotting pathways rather than uniform activation of the coagulation
+    system.
+  </li>
+
+  <li>
+    <strong>Fibrinolytic and Regulatory Feedbacks</strong>
+    Regulatory and fibrinolytic components exhibit localized expression
+    changes, with tPA/uPA and Serpin/A2M complexes showing upregulation
+    (red), while CPB2 and Vitronectin are downregulated (green). This
+    suggests fine-tuned control over clot formation, fibrinolysis, and the
+    release of inflammatory mediators during the physiological response.
+  </li>
+</ul>
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- 13. ko04136 (Retained) -->
+          <div id="kegg36-section" class="output-gallery">
+            <figure class="output-figure">
+              <img
+                alt="Example output image: ko04136.pathview.png"
+                src="https://i.imgur.com/Umr9rIy.png"
+              />
+              <figcaption>
+                <strong>ko04136.pathview.png</strong><br />
+                <code>Autophagy pathway</code><br />
+<ul style="margin: 8px 0 0 18px; padding: 0">
+  <li>
+    <strong>Upregulation of Initiation and Induction Complexes</strong>
+    Several key regulators involved in the initiation of autophagy, including
+    TOR within the TORC1 complex, ATG1, ATG101, and ATG13, are upregulated
+    (red). Their increased expression suggests that the signaling events that
+    trigger autophagy are activated under this condition.
+  </li>
+
+  <li>
+    <strong>Divergent PI3K Complex Regulation</strong>
+    The PI3K complex shows a mixed expression pattern during the vesicle
+    nucleation stage. While ATG6 is upregulated (red), VPS34 and VPS15 are
+    downregulated (green). This pattern points to selective regulation of the
+    membrane recruitment machinery instead of a uniform response across the
+    entire complex.
+  </li>
+
+  <li>
+    <strong>Activation of Ubiquitin-like Conjugation Systems</strong>
+    Proteins involved in autophagosome elongation, such as ATG9, ATG2, ATG16,
+    ATG3, ATG4, and ATG8, are consistently upregulated (red). Their expression
+    supports the progression of autophagosome formation and the expansion of
+    the autophagic membrane.
+  </li>
+
+  <li>
+    <strong>Overall Cellular Response Context</strong>
+    Although a few regulatory components, including Tap46 and parts of the
+    PI3K complex, are downregulated (green), most of the core ATG genes are
+    upregulated. Overall, the pathway reflects increased autophagic activity,
+    likely promoting cellular recycling, removal of damaged components, and
+    adaptation to physiological stress.
+  </li>
+</ul>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Lightbox Popup Container -->
+    <div id="imageLightbox" class="lightbox-modal" onclick="closeLightbox()">
+      <img id="lightboxImage" src="" alt="Enlarged Plot View" />
+    </div>
+  </body>
+</html>
